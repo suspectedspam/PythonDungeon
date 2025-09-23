@@ -85,6 +85,56 @@ class Combat:
             print(f"💥 CRITICAL HIT! {attacker} deals {damage} damage to {target}!")
         else:
             print(f"⚔️  {attacker} deals {damage} damage to {target}.")
+    
+    def run_combat(self, player, monster):
+        """
+        Handle full combat between player and monster.
+        
+        Args:
+            player: The player object
+            monster: The monster object
+            
+        Returns:
+            str: Result of combat ("victory" or "defeat")
+        """
+        print("\n⚔️  COMBAT BEGINS! ⚔️")
+        print("-" * 30)
+        
+        while player.is_alive and monster.is_alive:
+            # Player attacks first
+            player_damage, is_crit = self.calculate_critical_hit(player.strength)
+            new_health, monster_alive = self.take_damage(monster.current_health, player_damage)
+            monster.update_health(new_health)
+            
+            self.display_damage_message(player.name, monster.name, player_damage, is_crit)
+            monster.display_status()
+            
+            if not monster.is_alive:
+                print(f"\n🎉 Victory! You defeated the {monster.name}!")
+                print(f"💰 You gain experience from this battle!")
+                return "victory"
+            
+            print()
+            
+            # Monster counter-attacks
+            monster_damage, is_crit = self.calculate_critical_hit(monster.strength)
+            new_health, player_alive = self.take_damage(player.current_health, monster_damage)
+            player.update_health(new_health)
+            
+            self.display_damage_message(monster.name, player.name, monster_damage, is_crit)
+            player.display_status()
+            
+            if not player.is_alive:
+                print(f"\n💀 Defeat! The {monster.name} has bested you!")
+                print("🏠 You awaken back at the inn, wounded but alive...")
+                player.current_health = 1  # Player survives but barely
+                player.is_alive = True
+                return "defeat"
+            
+            print("\n" + "-" * 20)
+            input("Press Enter to continue the battle...")
+        
+        return "victory" if not monster.is_alive else "defeat"
 
 # Example usage and testing
 if __name__ == "__main__":
