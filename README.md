@@ -1,54 +1,51 @@
 # PythonDungeon
 
-A simple text-based dungeon crawler game written in Python.
+A text-based dungeon crawler game written in Python.
 
 ## Description
 
-PythonDungeon is a console-based adventure game where players explore a mysterious dungeon. The game starts with a simple welcome message and is designed to be expandable with additional features.
+PythonDungeon is a simple, console-based adventure game where players explore dungeons, fight monsters, and collect treasures. This project starts with basic console output and will gradually evolve into a full dungeon crawling experience.
 
-## Getting Started
+## Features (Current)
 
-### Prerequisites
+- Welcome screen with player name input
+- Basic game structure and organization
 
-- Python 3.6 or higher
+## Features (Planned)
 
-### Running the Game
+- Character creation and stats
+- Monster encounters and combat system
+- Inventory management
+- Multiple dungeon levels
+- Item collection and usage
+
+## How to Run
 
 ```bash
 python main.py
 ```
 
-## Features
+## Requirements
 
-- [x] Welcome message for players
-- [ ] Player character creation
-- [ ] Dungeon exploration
-- [ ] Combat system
-- [ ] Inventory management
-- [ ] Save/Load game functionality
+- Python 3.6 or higher
 
 ## Project Structure
 
 ```
 PythonDungeon/
-├── main.py              # Main game file
-├── README.md           # This file
-└── .github/
-    └── copilot-instructions.md  # Copilot instructions
+├── main.py        # Main game loop and entry point
+├── combat.py      # Combat system (to be implemented)
+├── monster.py     # Monster classes and definitions (to be implemented)
+└── README.md      # This file
 ```
 
-## Future Enhancements
+## Development Status
 
-- Add character classes and stats
-- Implement room-based exploration
-- Create monsters and combat
-- Add items and inventory system
-- Implement save/load functionality
-- Add ASCII art for enhanced visuals
+🚧 **Early Development** - Basic welcome screen implemented
 
 ## Contributing
 
-This is a personal learning project, but suggestions and improvements are welcome!
+This is a learning project. Feel free to suggest improvements or report bugs!
 
 ## License
 

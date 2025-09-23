@@ -1,30 +1,37 @@
 #!/usr/bin/env python3
 """
-PythonDungeon - A Simple Text-Based Dungeon Crawler Game
+PythonDungeon - A Text-Based Dungeon Crawler Game
 """
 
-def welcome_player():
-    """Display welcome message to the player."""
+def display_welcome():
+    """Display the welcome message to the player."""
     print("=" * 50)
     print("    Welcome to PythonDungeon!")
     print("=" * 50)
     print()
-    print("You find yourself at the entrance of a mysterious dungeon.")
-    print("Adventure awaits you in the depths below...")
+    print("You find yourself standing at the entrance of a dark,")
+    print("mysterious dungeon. Ancient stones line the walls,")
+    print("and you can hear strange sounds echoing from within.")
     print()
-    print("Prepare yourself, brave adventurer!")
-    print("=" * 50)
+    print("Your adventure begins now...")
+    print()
 
 def main():
     """Main game function."""
-    welcome_player()
+    display_welcome()
     
-    # TODO: Add game logic here
-    # - Player creation
-    # - Game loop
-    # - Dungeon exploration
-    # - Combat system
-    # - Inventory management
+    # Get player's name
+    player_name = input("What is your name, brave adventurer? ").strip()
     
+    if not player_name:
+        player_name = "Unknown Hero"
+    
+    print(f"\nGreetings, {player_name}!")
+    print("Prepare yourself for the challenges that lie ahead.")
+    print("\n" + "-" * 50)
+    print("Your dungeon crawling adventure starts here!")
+    print("(More features coming soon...)")
+    print("-" * 50)
+
 if __name__ == "__main__":
     main()
