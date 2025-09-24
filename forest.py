@@ -8,6 +8,7 @@ import random
 from monster import (create_goblin, create_skeleton, create_carnivorous_plant, 
                     create_dire_bat, create_dire_rat, create_owlbear, create_elf)
 from combat import Combat
+from display import display
 
 class Forest:
     """Manages forest adventures and encounters."""
@@ -67,30 +68,99 @@ class Forest:
     
     def start_adventure(self, player):
         """
-        Handle a forest adventure encounter.
+        Handle a forest adventure with potential for multiple encounters.
         
         Args:
             player: The player object
             
         Returns:
-            str: Result of the adventure ("victory", "defeat", "fled", "peaceful")
+            str: Result of the adventure ("victory", "defeat", "fled", "peaceful", "returned")
         """
-        print("\n" + "🌲" * 25)
-        print("      FOREST ADVENTURE")
-        print("🌲" * 25)
-        print()
-        print("You venture into the dense woodland...")
-        print("Sunlight filters through the canopy above.")
-        print("The forest is alive with rustling sounds.")
-        print()
+        forest_intro = """You venture into the dense woodland...
+Sunlight filters through the canopy above.
+The forest is alive with rustling sounds.
+
+Adventure awaits in the mysterious depths ahead!"""
         
-        # Random encounter chance
-        encounter_chance = random.random()
+        # Enable HP display for forest adventure
+        display.set_header("Forest Adventure")
+        display.set_player_for_header(player)
+        display.display_text(forest_intro, exposition=True, title="Forest Adventure")
         
-        if encounter_chance < 0.8:  # 80% chance of monster encounter
-            return self.monster_encounter(player)
-        else:  # 20% chance of peaceful exploration
-            return self.peaceful_exploration(player)
+        # Continue adventuring until player decides to return
+        while True:
+            # Random encounter chance
+            encounter_chance = random.random()
+            
+            if encounter_chance < 0.8:  # 80% chance of monster encounter
+                result = self.monster_encounter(player)
+                
+                # If player died, fled, or was defeated, end the adventure
+                if result in ["defeat", "fled"]:
+                    return result
+                elif result == "victory":
+                    # After victory, give choice to continue or return
+                    continue_choice = self.ask_continue_adventure(player)
+                    if continue_choice == "return":
+                        return "returned"
+                    # If continue, loop again for another encounter
+                    
+            else:  # 20% chance of peaceful exploration
+                result = self.peaceful_exploration(player)
+                
+                # After peaceful exploration, give choice to continue or return  
+                continue_choice = self.ask_continue_adventure(player)
+                if continue_choice == "return":
+                    return "returned"
+                # If continue, loop again for another encounter
+    
+    def ask_continue_adventure(self, player):
+        """
+        Ask player if they want to continue adventuring or return to inn.
+        
+        Args:
+            player: The player object
+            
+        Returns:
+            str: "continue" or "return"
+        """
+        options = [
+            "🌲 Continue exploring the forest",
+            "🏠 Return to the inn"
+        ]
+        
+        status_text = f"Current Status: {player.name} (Lvl {player.level}): {player.current_health}/{player.max_health} HP ({player.get_health_status()}) | Strength: {player.strength}"
+        
+        # Show continue choice (HP already in header)
+        choice = display.display_menu("Adventure Choice", options, status_text)
+        
+        if choice == "1":
+            # Variety of continue messages
+            continue_messages = [
+                """🌿 You decide to venture deeper into the forest...
+The trees grow thicker and the shadows longer.""",
+                """🍃 Curiosity drives you to explore further...
+New paths wind deeper into the woodland.""",
+                """🌱 The forest calls to you with mysteries yet unsolved...
+You press onward through the undergrowth.""",
+                """🌳 Adventure awaits in the heart of the forest...
+You continue your journey with renewed determination."""
+            ]
+            
+            continue_text = random.choice(continue_messages)
+            # Show continue message (HP already in header)
+            display.display_text(continue_text, title="Deeper into the Forest")
+            return "continue"
+        elif choice == "2" or choice == "quit":
+            return_text = """🏠 You decide it's time to head back to the safety of the inn.
+You carefully make your way back through the forest paths."""
+            # Show return message and clear HP from header
+            display.display_text(return_text, title="Returning to Inn")
+            display.clear_hp_header()
+            return "return"
+        else:
+            # Default to return if something goes wrong
+            return "return"
     
     def monster_encounter(self, player):
         """
@@ -104,52 +174,18 @@ class Forest:
         """
         monster = self.create_forest_monster(player.level)
         
-        print(f"🐉 A wild {monster.name} appears!")
-        print("It looks hostile and ready to fight!")
-        print()
-        monster.display_status()
-        print()
+        encounter_text = f"""🐉 A wild {monster.name} appears!
+It looks hostile and ready to fight!
+
+🐉 {monster.name} (Lvl {monster.level}): {monster.current_health}/{monster.max_health} HP ({monster.get_health_status()}) | Strength: {monster.strength}
+
+Combat is about to begin!"""
         
-        print("What do you do?")
-        print("1. ⚔️  Attack")
-        print("2. 🏃 Try to flee")
-        print()
+        # Show encounter info (HP already in header from forest adventure)
+        display.display_text(encounter_text, title="Monster Encounter")
         
-        while True:
-            try:
-                choice = input("Choose your action (1-2): ").strip()
-                if choice == "1":
-                    return self.combat.run_combat(player, monster)
-                elif choice == "2":
-                    flee_result = self.attempt_flee()
-                    if flee_result == "failed_flee":
-                        # If flee fails, force combat
-                        return self.combat.run_combat(player, monster)
-                    else:
-                        return flee_result
-                else:
-                    print("Please choose 1 or 2.")
-            except (EOFError, KeyboardInterrupt):
-                print("\nGame interrupted.")
-                return "fled"
-    
-    def attempt_flee(self):
-        """
-        Attempt to flee from combat.
-        
-        Returns:
-            str: Result of flee attempt
-        """
-        flee_chance = random.random()
-        
-        if flee_chance < 0.7:  # 70% chance to successfully flee
-            print("\n🏃 You successfully escape into the forest!")
-            print("🌲 You make it back to the inn safely.")
-            return "fled"
-        else:
-            print("\n❌ You couldn't escape!")
-            print("The creature blocks your path - you must fight!")
-            return "failed_flee"
+        # Start combat (which will update header to include enemy HP)
+        return self.combat.run_combat(player, monster)
     
     def peaceful_exploration(self, player):
         """
@@ -159,7 +195,7 @@ class Forest:
             player: The player object
             
         Returns:
-            str: Result of exploration
+            str: Result of exploration ("peaceful")
         """
         events = [
             "🍄 You discover some healing mushrooms and feel refreshed!",
@@ -170,16 +206,21 @@ class Forest:
         ]
         
         event = random.choice(events)
-        print(event)
         
         # Small healing bonus for peaceful exploration
+        heal_text = ""
         if player.current_health < player.max_health:
             heal_amount = random.randint(3, 8)
             actual_healed = player.heal(heal_amount)
             if actual_healed > 0:
-                print(f"💚 You restored {actual_healed} HP from your peaceful journey!")
+                heal_text = f"\n💚 You restored {actual_healed} HP from your peaceful journey!"
         
-        print("\n🏠 You return to the inn feeling content.")
+        peaceful_text = f"""{event}{heal_text}
+
+The forest continues to beckon with more secrets to discover..."""
+        
+        # Show peaceful exploration (HP already in header)
+        display.display_text(peaceful_text, title="Peaceful Discovery")
         return "peaceful"
 
 # Example usage and testing
