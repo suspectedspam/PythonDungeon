@@ -80,6 +80,60 @@ class Combat:
             damage = self.calculate_damage(base_damage)
             return damage, False
     
+    def check_health_threshold(self, monster, crossed_thresholds):
+        """
+        Check if monster has crossed health thresholds and display appropriate message.
+        
+        Args:
+            monster: The monster object
+            crossed_thresholds: Set of thresholds already crossed
+            
+        Returns:
+            str: Threshold message to display, or None if no new threshold crossed
+        """
+        health_percent = (monster.current_health / monster.max_health) * 100
+        
+        # Define thresholds and messages (from high to low)
+        thresholds = [
+            (75, "🩸 The monster staggers slightly!"),
+            (50, f"💔 The {monster.name} looks wounded!"),
+            (25, f"⚠️ The {monster.name} appears badly injured!"),
+            (10, f"💀 The {monster.name} is near death!")
+        ]
+        
+        for threshold, message in thresholds:
+            if health_percent <= threshold and threshold not in crossed_thresholds:
+                crossed_thresholds.add(threshold)
+                return message
+        
+        return None
+
+    def check_player_health_threshold(self, player, crossed_thresholds):
+        """
+        Check if player has crossed health thresholds and display appropriate message.
+        
+        Args:
+            player: The player object
+            crossed_thresholds: Set of thresholds already crossed
+            
+        Returns:
+            str: Threshold message to display, or None if no new threshold crossed
+        """
+        health_percent = (player.current_health / player.max_health) * 100
+        
+        # Define thresholds and messages (from high to low)
+        thresholds = [
+            (50, f"💔 {player.emoji} You're feeling the strain of battle!"),
+            (25, f"⚠️ {player.emoji} You're badly hurt and struggling to continue!")
+        ]
+        
+        for threshold, message in thresholds:
+            if health_percent <= threshold and threshold not in crossed_thresholds:
+                crossed_thresholds.add(threshold)
+                return message
+        
+        return None
+
     def run_combat(self, player, monster):
         """
         Handle full combat between player and monster with scrolling display.
@@ -91,7 +145,9 @@ class Combat:
         Returns:
             str: Result of combat ("victory", "defeat", or "fled")
         """
-        round_num = 1
+        # Track which health thresholds have been crossed
+        monster_crossed_thresholds = set()
+        player_crossed_thresholds = set()
         
         # Initialize combat display by appending to scroll
         display.set_header("COMBAT INITIATED")
@@ -103,17 +159,11 @@ class Combat:
         display.add_line("", delay=0)
         
         while player.is_alive and monster.is_alive:
-            # Show combat round status in scrolling window
-            display.display_combat_round(player, monster, round_num)
+            # Show combat status in scrolling window
+            display.display_combat_round(player, monster)
             
-            # Player's turn - show options
-            combat_options = [
-                "⚔️ Attack",
-                "💚 Heal (restore 10-15 HP)",
-                "🏃 Try to flee"
-            ]
-            
-            choice = display.display_menu(f"Combat Round {round_num} - Your Turn", combat_options, "")
+            # Player's turn - show options in footer and get choice
+            choice = display.display_combat_options()
             
             if choice == "quit":
                 return "fled"
@@ -128,33 +178,39 @@ class Combat:
                 display.add_line("", delay=0.3)
                 
                 if is_crit:
-                    display.add_line(f"💥 CRITICAL HIT! {player.name} deals {player_damage} damage!", delay=0.8)
+                    display.add_line(f"💥 CRITICAL HIT! {player.emoji} {player.name} deals {player_damage} damage!", delay=0.8)
                 else:
-                    display.add_line(f"⚔️ {player.name} deals {player_damage} damage to {monster.name}.", delay=0.8)
+                    display.add_line(f"⚔️ {player.emoji} {player.name} deals {player_damage} damage to {monster.name}.", delay=0.8)
                 
-                display.add_line(f"🐉 {monster.name}: {monster.current_health}/{monster.max_health} HP ({monster.get_health_status()})", delay=0.6)
+                # Check for health threshold messages
+                if monster.is_alive:  # Only check thresholds if monster is still alive
+                    threshold_message = self.check_health_threshold(monster, monster_crossed_thresholds)
+                    if threshold_message:
+                        display.add_line(threshold_message, delay=0.6)
                 
                 if not monster.is_alive:
                     display.add_line("", delay=0.4)
                     display.add_line(f"🎉 Victory! You defeated the {monster.name}!", delay=0.6)
                     display.add_line("💰 You gain experience from this battle!", delay=0)
                     display.set_footer("Press Enter to continue...")
+                    display.refresh_display()
                     try:
                         input()
                     except (EOFError, KeyboardInterrupt):
                         pass
+                    # Clear enemy from header after battle
+                    display.set_monster_for_header(None)
                     return "victory"
                     
             elif choice == "2":  # Heal
                 if player.current_health == player.max_health:
                     display.add_line("", delay=0.3)
-                    display.add_line(f"💚 {player.name} is already at full health!", delay=0)
+                    display.add_line(f"💚 {player.emoji} {player.name} is already at full health!", delay=0)
                 else:
                     heal_amount = random.randint(10, 15)
                     actual_healed = player.heal(heal_amount)
                     display.add_line("", delay=0.3)
-                    display.add_line(f"💚 {player.name} heals for {actual_healed} HP!", delay=0.8)
-                    display.add_line(f"🏃 {player.name}: {player.current_health}/{player.max_health} HP ({player.get_health_status()})", delay=0)
+                    display.add_line(f"💚 {player.emoji} {player.name} heals for {actual_healed} HP!", delay=0.8)
                     
             elif choice == "3":  # Flee
                 flee_result = self.attempt_flee()
@@ -163,10 +219,13 @@ class Combat:
                     display.add_line("🏃 You successfully escape from combat!", delay=0.8)
                     display.add_line("🌲 You make it back to the inn safely.", delay=0)
                     display.set_footer("Press Enter to continue...")
+                    display.refresh_display()
                     try:
                         input()
                     except (EOFError, KeyboardInterrupt):
                         pass
+                    # Clear enemy from header after fleeing
+                    display.set_monster_for_header(None)
                     return "fled"
                 else:
                     display.add_line("❌ You couldn't escape! You must fight!", delay=0)
@@ -188,7 +247,11 @@ class Combat:
             else:
                 display.add_line(f"⚔️ {monster.name} deals {monster_damage} damage to {player.name}.", delay=0.8)
             
-            display.add_line(f"🏃 {player.name}: {player.current_health}/{player.max_health} HP ({player.get_health_status()})", delay=0.6)
+            # Check for player health threshold messages
+            if player.is_alive:  # Only check thresholds if player is still alive
+                player_threshold_message = self.check_player_health_threshold(player, player_crossed_thresholds)
+                if player_threshold_message:
+                    display.add_line(player_threshold_message, delay=0.6)
             
             if not player.is_alive:
                 display.add_line("", delay=0.4)
@@ -199,16 +262,20 @@ class Combat:
                 player.is_alive = True
                 
                 display.set_footer("Press Enter to continue...")
+                display.refresh_display()
                 try:
                     input()
                 except (EOFError, KeyboardInterrupt):
                     pass
+                # Clear enemy from header after defeat
+                display.set_monster_for_header(None)
                 return "defeat"
             
-            # Small pause between rounds to let player read
+            # Small pause between turns to let player read
             time.sleep(1)
-            round_num += 1
         
+        # Clear enemy from header after combat loop ends
+        display.set_monster_for_header(None)
         return "victory" if not monster.is_alive else "defeat"
 
 # Global combat instance

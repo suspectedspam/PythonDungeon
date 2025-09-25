@@ -5,8 +5,6 @@ Handles forest encounters, monsters, and exploration
 """
 
 import random
-from monster import (create_goblin, create_skeleton, create_carnivorous_plant, 
-                    create_dire_bat, create_dire_rat, create_owlbear, create_elf)
 from combat import Combat
 from display import display
 
@@ -19,52 +17,18 @@ class Forest:
     
     def create_forest_monster(self, player_level=1):
         """
-        Create a monster appropriate for forest encounters.
+        Create a monster appropriate for forest encounters using the database.
         
         Args:
             player_level (int): Player's current level for scaling
             
         Returns:
-            Monster: A forest-appropriate monster
+            Monster: A forest-appropriate monster from the database
         """
-        # Forest creatures that make sense in a woodland setting
-        forest_creatures = [
-            ("goblin", 0.25),        # Common forest dwellers
-            ("dire_rat", 0.20),      # Forest vermin
-            ("carnivorous_plant", 0.15), # Dangerous forest plants
-            ("dire_bat", 0.15),      # Cave/forest bats
-            ("skeleton", 0.10),      # Ancient remains in the woods
-            ("elf", 0.10),          # Forest guardians gone rogue
-            ("owlbear", 0.05),      # Rare, dangerous forest predator
-        ]
+        from monster import Monster
         
-        # Choose creature based on weighted probability
-        rand = random.random()
-        cumulative = 0
-        
-        for creature_type, probability in forest_creatures:
-            cumulative += probability
-            if rand <= cumulative:
-                # Scale monster level based on player level (±1)
-                monster_level = random.randint(max(1, player_level - 1), player_level + 1)
-                
-                if creature_type == "goblin":
-                    return create_goblin(monster_level)
-                elif creature_type == "dire_rat":
-                    return create_dire_rat(monster_level)
-                elif creature_type == "carnivorous_plant":
-                    return create_carnivorous_plant(monster_level)
-                elif creature_type == "dire_bat":
-                    return create_dire_bat(monster_level)
-                elif creature_type == "skeleton":
-                    return create_skeleton(monster_level)
-                elif creature_type == "elf":
-                    return create_elf(monster_level)
-                elif creature_type == "owlbear":
-                    return create_owlbear(monster_level)
-        
-        # Fallback to goblin if something goes wrong
-        return create_goblin(player_level)
+        # Use database-driven monster creation
+        return Monster.create_random_for_level(player_level)
     
     def start_adventure(self, player):
         """
@@ -129,7 +93,7 @@ Adventure awaits in the mysterious depths ahead!"""
             "🏠 Return to the inn"
         ]
         
-        status_text = f"Current Status: {player.name} (Lvl {player.level}): {player.current_health}/{player.max_health} HP ({player.get_health_status()}) | Strength: {player.strength}"
+        status_text = f"Current Status: {player.emoji} {player.name} (Lvl {player.level}): {player.current_health}/{player.max_health} HP"
         
         # Show continue choice (HP already in header)
         choice = display.display_menu("Adventure Choice", options, status_text)
@@ -177,9 +141,7 @@ You carefully make your way back through the forest paths."""
         encounter_text = f"""🐉 A wild {monster.name} appears!
 It looks hostile and ready to fight!
 
-🐉 {monster.name} (Lvl {monster.level}): {monster.current_health}/{monster.max_health} HP ({monster.get_health_status()}) | Strength: {monster.strength}
-
-Combat is about to begin!"""
+🐉 {monster.name} (Lvl {monster.level})"""
         
         # Show encounter info (HP already in header from forest adventure)
         display.display_text(encounter_text, title="Monster Encounter")
