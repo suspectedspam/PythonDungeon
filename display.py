@@ -11,7 +11,7 @@ import time
 class Display:
     """Manages scrolling text window with static elements."""
     
-    def __init__(self, scroll_delay=0.03, line_delay=0.5, window_height=15):
+    def __init__(self, scroll_delay=0.03, line_delay=0.5, window_height=20):
         """
         Initialize display system.
         
@@ -77,13 +77,40 @@ class Display:
             header_parts.append(self.header_text)
         
         # Add player HP
-        header_parts.append(f"🏃 {self.player.name}: {self.player.current_health}/{self.player.max_health} HP")
+        header_parts.append(f"{self.player.emoji} {self.player.name}: {self.player.current_health}/{self.player.max_health} HP")
         
-        # Add monster HP if in combat
+        # Show monster name with health threshold icon if in combat
         if self.monster:
-            header_parts.append(f"🐉 {self.monster.name}: {self.monster.current_health}/{self.monster.max_health} HP")
+            health_icon = self.get_health_threshold_icon(self.monster)
+            header_parts.append(f"🐉 {self.monster.name} {health_icon}")
         
         return " | ".join(header_parts)
+    
+    def get_health_threshold_icon(self, monster):
+        """
+        Get the appropriate health threshold icon based on monster's current health.
+        
+        Args:
+            monster: The monster object
+            
+        Returns:
+            str: Icon representing the monster's health status
+        """
+        if not monster:
+            return ""
+        
+        health_percent = (monster.current_health / monster.max_health) * 100
+        
+        if health_percent <= 10:
+            return "💀"  # Near death
+        elif health_percent <= 25:
+            return "⚠️"   # Badly injured
+        elif health_percent <= 50:
+            return "💔"  # Wounded
+        elif health_percent <= 75:
+            return "🩸"  # Slightly injured
+        else:
+            return "💚"  # Healthy
     
     def add_line(self, line, delay=None):
         """
@@ -185,7 +212,7 @@ class Display:
     
     def display_menu(self, title, options, status="", exposition_intro=False):
         """
-        Display a menu in the scrolling window without clearing existing content.
+        Display a menu with options in the footer.
         
         Args:
             title (str): Menu title
@@ -196,13 +223,13 @@ class Display:
         Returns:
             str: User's choice
         """
-        # Don't clear content - just update header and add new content
+        # Set header and clear footer initially
         self.set_header(title)
         self.set_footer("")
         
-        # Add a separator line before new menu content
+        # Add a separator line before new content
         self.add_line("")
-        self.add_line("-" * 60)
+        self.add_line("-" * 60, delay=0.3)
         
         # Add status/intro content
         if status:
@@ -210,20 +237,38 @@ class Display:
             self.add_lines(status_lines, exposition=exposition_intro)
         
         self.add_line("")
-        self.add_line("OPTIONS:")
         
-        # Add menu options one by one with delay
+        # Create footer options text with shortened versions
+        short_options = []
         for i, option in enumerate(options, 1):
-            self.add_line(f"  {i}. {option}")
-            time.sleep(self.line_delay * 0.5)  # Shorter delay for menu options
+            # Extract key words from option for shorter footer display
+            if "Rest" in option:
+                short_options.append(f"{i}) 🛏️ Rest")
+            elif "adventure" in option or "Forest" in option:
+                short_options.append(f"{i}) 🌲 Adventure")
+            elif "stats" in option:
+                short_options.append(f"{i}) 📊 Stats")
+            elif "Save game" in option:
+                short_options.append(f"{i}) 💾 Save")
+            elif "Settings" in option:
+                short_options.append(f"{i}) ⚙️ Settings")
+            elif "Quit" in option:
+                short_options.append(f"{i}) 🚪 Quit")
+            elif "Continue exploring" in option:
+                short_options.append(f"{i}) 🌲 Continue")
+            elif "Return to" in option:
+                short_options.append(f"{i}) 🏠 Return")
+            else:
+                # Fallback to first few words
+                words = option.split()[:3]
+                short_options.append(f"{i}) {' '.join(words)}")
         
-        self.add_line("")
-        self.add_line("-" * 60)
+        options_text = " | ".join(short_options) + ": "
         
         # Get user choice using footer
         while True:
             try:
-                self.set_footer(f"Choose your action (1-{len(options)}): ")
+                self.set_footer(options_text)
                 self.refresh_display()
                 choice = input().strip()
                 if choice.isdigit() and 1 <= int(choice) <= len(options):
@@ -259,7 +304,6 @@ class Display:
         ]
         
         self.add_lines(stats_lines)
-        self.add_line("-" * 40)
         
         # Set footer and refresh display for pause
         self.set_footer("Press Enter to continue...")
@@ -270,23 +314,41 @@ class Display:
         except (EOFError, KeyboardInterrupt):
             pass
     
-    def display_combat_round(self, player, monster, round_num):
+    def display_combat_round(self, player, monster):
         """
-        Display combat round information in scrolling window with HP in header.
+        Display combat round information in scrolling window with player HP in header.
         
         Args:
             player: Player object
             monster: Monster object  
-            round_num (int): Current round number (not shown in header anymore)
         """
-        # Set up combat header with both player and monster HP
+        # Set up combat header with player HP and monster name
         self.set_header("COMBAT")
         self.set_player_for_header(player)
         self.set_monster_for_header(monster)
         self.set_footer("")
+    
+    def display_combat_options(self):
+        """
+        Display combat options in the footer and get user choice.
         
-        # Just add a simple round separator
-        self.add_line(f"--- Round {round_num} ---", delay=0.4)
+        Returns:
+            str: User's choice (1-3)
+        """
+        options_text = "1) ⚔️ Attack  2) 💚 Heal  3) 🏃 Try to flee"
+        
+        while True:
+            try:
+                self.set_footer(options_text)
+                self.refresh_display()
+                choice = input().strip()
+                if choice in ['1', '2', '3']:
+                    # Clear footer after successful choice
+                    self.set_footer("")
+                    return choice
+                self.add_line(f"Please choose 1, 2, or 3.")
+            except (EOFError, KeyboardInterrupt):
+                return "quit"
 
 # Global display instance for easy access
 display = Display()

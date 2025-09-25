@@ -1,9 +1,23 @@
 #!/usr/bin/env python3
 """
-PythonDungeon - A Text-Based Dungeon Crawler Game
+Pyt        inn_options = [
+            "🛏️ Rest (Restore full        inn_options = [
+            "🛏️ Rest (Restore full health)",
+            "🌲 Go on an adventure in the Forest", 
+            "📊 View your stats",
+            "💾 Save game",
+            "⚙️ Settings",
+            "🚪 Quit game"
+        ])",
+            "🌲 Go on an adventure in the Forest", 
+            "📊 View your stats",
+            "💾 Save game",
+            "⚙️ Settings",
+            "🚪 Quit game"
+        ]eon - A Text-Based Dungeon Crawler Game
 """
 
-from player import create_player
+from player import Player
 from inn import Inn
 from forest import Forest
 from display import display
@@ -21,57 +35,59 @@ Your adventure begins now..."""
     # Exposition text - character by character
     display.display_text(welcome_text, exposition=True, pause=True, title="Welcome Adventurer")
 
-def create_character():
-    """Create a new player character using the display system."""
-    # Use the display system for character creation
-    display.set_header("CHARACTER CREATION")
-    display.add_line("")
-    display.add_line("🎭 CHARACTER CREATION")
-    display.add_line("-" * 20)
-    display.add_line("")
-    display.add_line("What is your name, brave adventurer?")
+
+def show_settings_menu(player):
+    """Show and handle the settings menu."""
+    settings = player.get_settings()
     
-    # Set footer with input prompt and refresh display
-    display.set_footer("Enter your name: ")
-    display.refresh_display()
-    
-    # Get player's name
     while True:
+        # Show current settings
+        display.set_header("GAME SETTINGS")
+        display.add_line("", delay=0.3)
+        display.add_line("⚙️ GAME SETTINGS", delay=0.6)
+        display.add_line("-" * 20, delay=0.4)
+        display.add_line("", delay=0.3)
+        
+        display.add_line("Current Auto-Save Settings:", delay=0.4)
+        display.add_line(f"1. After Resting: {'✅ Enabled' if settings['auto_save_after_rest'] else '❌ Disabled'}", delay=0.2)
+        display.add_line(f"2. After Combat: {'✅ Enabled' if settings['auto_save_after_combat'] else '❌ Disabled'}", delay=0.2)
+        display.add_line(f"3. On Inn Visit: {'✅ Enabled' if settings['auto_save_on_inn_visit'] else '❌ Disabled'}", delay=0.2)
+        display.add_line("", delay=0.3)
+        display.add_line("4. 🔙 Back to Inn", delay=0.2)
+        
+        display.set_footer("Choose setting to toggle (1-4): ")
+        display.refresh_display()
+        
         try:
-            player_name = input().strip()
-            if player_name:
+            choice = input().strip()
+            
+            if choice == "1":
+                settings['auto_save_after_rest'] = not settings['auto_save_after_rest']
+                status = "enabled" if settings['auto_save_after_rest'] else "disabled"
+                display.add_line(f"✅ Auto-save after resting {status}!", delay=0.4)
+                player.update_settings(settings)
+            
+            elif choice == "2":
+                settings['auto_save_after_combat'] = not settings['auto_save_after_combat']
+                status = "enabled" if settings['auto_save_after_combat'] else "disabled"
+                display.add_line(f"✅ Auto-save after combat {status}!", delay=0.4)
+                player.update_settings(settings)
+            
+            elif choice == "3":
+                settings['auto_save_on_inn_visit'] = not settings['auto_save_on_inn_visit']
+                status = "enabled" if settings['auto_save_on_inn_visit'] else "disabled"
+                display.add_line(f"✅ Auto-save on inn visit {status}!", delay=0.4)
+                player.update_settings(settings)
+            
+            elif choice == "4":
+                display.add_line("🏠 Returning to inn...", delay=0.4)
                 break
-            display.add_line("Please enter a valid name.")
-            display.set_footer("Enter your name: ")
-            display.refresh_display()
+            
+            else:
+                display.add_line("Please choose a valid option (1-4).")
+        
         except (EOFError, KeyboardInterrupt):
-            print("\nGame interrupted.")
-            return None
-    
-    # Clear footer after getting input
-    display.set_footer("")
-    
-    # Create player with default stats
-    player = create_player(player_name)
-    
-    creation_text = f"""
-Greetings, {player_name}!
-You are now ready to begin your adventure!
-
-📊 {player_name} Stats:
-   Level: {player.level}
-   Health: {player.current_health}/{player.max_health}
-   Strength: {player.strength}
-   Status: {player.get_health_status()}
-
-{player.name} arrives at the inn, ready for adventure!"""
-    
-    # Regular text - line by line, appends to scroll
-    display.display_text(creation_text, title="Character Created")
-    
-    return player
-    
-    return player
+            break
 
 def game_loop(player, inn, forest):
     """Main game loop with display system."""
@@ -85,10 +101,11 @@ def game_loop(player, inn, forest):
             "🛏️ Rest (Restore full health)",
             "🌲 Go on an adventure in the Forest", 
             "📊 View your stats",
-            "🚪 Quit game"
+            "� Save game",
+            "�🚪 Quit game"
         ]
         
-        status_text = f"The warm fireplace crackles as adventurers share\ntales of their journeys. The innkeeper nods\nwelcomingly as you approach the bar.\n\n{player.name} (Lvl {player.level}): {player.current_health}/{player.max_health} HP ({player.get_health_status()}) | Strength: {player.strength}"
+        status_text = f"The warm fireplace crackles as adventurers share\ntales of their journeys. The innkeeper nods\nwelcomingly as you approach the bar.\n\n{player.emoji} {player.name} (Lvl {player.level}): {player.current_health}/{player.max_health} HP"
         
         # Always append to scrolling content
         choice = display.display_menu("Welcome to the Cozy Dragon Inn! 🏠", inn_options, status_text, exposition_intro=False)
@@ -104,6 +121,8 @@ def game_loop(player, inn, forest):
                 rest_text = f"""💤 You rest peacefully at the inn...
 💚 You restored {restored} HP and feel refreshed!
 🏠 Ready for your next adventure!"""
+                # Auto-save after resting (if enabled)
+                player.auto_save("rest")
             
             # Regular text - line by line
             display.display_text(rest_text, title="Resting at the Inn")
@@ -112,6 +131,9 @@ def game_loop(player, inn, forest):
             print("\n🌲 You head towards the forest...")
             
             result = forest.start_adventure(player)
+            
+            # Auto-save after forest adventure (if enabled)
+            player.auto_save("combat")
             
             # Clear HP header when returning from adventure
             display.clear_hp_header()
@@ -134,7 +156,15 @@ def game_loop(player, inn, forest):
         elif choice == "3":  # View stats
             display.display_stats(player)
             
-        elif choice == "4":  # Quit
+        elif choice == "4":  # Save game
+            player.manual_save()
+            
+        elif choice == "5":  # Settings
+            show_settings_menu(player)
+            
+        elif choice == "6":  # Quit
+            # Save before quitting
+            player.auto_save()
             break
     
     # End game message - exposition
@@ -155,8 +185,13 @@ def main():
     
     display_welcome()
     
-    # Create character
-    player = create_character()
+    # Load existing character or create new one
+    player = Player.load_or_create_character()
+    
+    # Check if player creation/loading was cancelled
+    if player is None:
+        display.add_line("👋 Thanks for playing PythonDungeon!")
+        return
     
     # Initialize game systems
     inn = Inn()
