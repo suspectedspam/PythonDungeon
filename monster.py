@@ -62,15 +62,13 @@ class Monster:
     
     def display_status(self):
         """Display the monster's current status."""
-        status = self.get_health_status()
-        print(f"🐉 {self.name} (Lvl {self.level}): {self.current_health}/{self.max_health} HP ({status}) | Strength: {self.strength}")
+        print(f"🐉 {self.name} (Lvl {self.level}): {self.current_health}/{self.max_health} HP")
     
     def display_stats(self):
         """Display the monster's full stats."""
         print(f"📊 {self.name} Stats:")
         print(f"   Level: {self.level}")
         print(f"   Health: {self.current_health}/{self.max_health}")
-        print(f"   Strength: {self.strength}")
         print(f"   Status: {self.get_health_status()}")
     
     def __str__(self):
@@ -147,67 +145,46 @@ class Monster:
 
 # Example usage and testing
 if __name__ == "__main__":
-    # Import combat system for proper testing
-    from combat import Combat
-    
     print("=== Monster System Test ===")
     print()
     
-    # Create combat system and a goblin
-    combat = Combat()
-    goblin = create_goblin()
-    print(f"Created: {goblin}")
-    goblin.display_status()
-    print()
+    # Test database-driven monster creation
+    print("Testing database-driven monster creation:")
     
-    # Test damage using combat system
-    print("🗡️  Player attacks goblin!")
-    damage_dealt = combat.calculate_damage(10)
-    new_health, is_alive = combat.take_damage(goblin.current_health, damage_dealt)
-    goblin.update_health(new_health)
+    try:
+        # Test monsters for different levels
+        for level in [1, 3, 5]:
+            print(f"\nLevel {level} monsters:")
+            for i in range(3):
+                monster = Monster.create_random_for_level(level)
+                print(f"  {monster.emoji} {monster}")
+                monster.display_status()
     
-    combat.display_damage_message("Player", goblin.name, damage_dealt)
-    goblin.display_status()
-    print()
-    
-    # Test goblin counter-attack using its strength
-    if goblin.is_alive:
-        print(f"🗡️  {goblin.name} counter-attacks!")
-        monster_damage, is_critical = combat.calculate_critical_hit(goblin.strength)
-        combat.display_damage_message(goblin.name, "Player", monster_damage, is_critical)
-    print()
-    
-    # Test random monster creation with levels
-    print("Creating random monsters:")
-    for i in range(5):
-        monster = create_random_monster(4)
-        print(f"  {monster}")
+    except Exception as e:
+        print(f"Database test failed: {e}")
+        print("Testing fallback monster creation:")
+        
+        # Test fallback monsters
+        fallback1 = Monster.create_fallback_monster(1)
+        fallback3 = Monster.create_fallback_monster(3)
+        fallback5 = Monster.create_fallback_monster(5)
+        
+        print(f"Level 1 fallback: {fallback1}")
+        print(f"Level 3 fallback: {fallback3}")
+        print(f"Level 5 fallback: {fallback5}")
     
     print()
     
-    # Test area-based creation
-    print("Monsters by area level:")
-    area1_monster = create_monster_for_area(1)
-    area3_monster = create_monster_for_area(3)
-    area5_monster = create_monster_for_area(5)
-    
-    print(f"  Area 1: {area1_monster}")
-    print(f"  Area 3: {area3_monster}")
-    print(f"  Area 5: {area5_monster}")
-    
+    # Test manual monster creation
+    print("Testing manual monster creation:")
+    test_monster = Monster("Test Dragon", 100, 15, 5, "🐉")
+    test_monster.display_stats()
     print()
     
-    # Test new monster types
-    print("New monster examples:")
-    owlbear = create_owlbear(4)
-    dire_rat = create_dire_rat(2)
-    dark_elf = create_elf(3)
-    plant = create_carnivorous_plant(2)
-    
-    owlbear.display_stats()
-    print()
-    dire_rat.display_stats()
-    print()
-    dark_elf.display_stats()
-    print()
-    plant.display_stats()
+    # Test damage system
+    print("Testing damage system:")
+    print(f"Before damage: {test_monster}")
+    test_monster.update_health(50)
+    print(f"After taking damage: {test_monster}")
+    print(f"Health status: {test_monster.get_health_status()}")
+    print(f"Is alive: {test_monster.is_alive}")
