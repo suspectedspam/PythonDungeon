@@ -1,5 +1,26 @@
 #!/usr/bin/env python3
 """
+Game database management for PythonDungeon
+Handles SQLite database operations for players, stats, settings, and monsters
+"""
+
+import sqlite3
+import random
+from datetime import datetime
+
+class GameDatabase:
+    """Manages all database operations for the game."""
+    
+    def __init__(self, db_path="data/pythondungeon.db"):
+        """Initialize the database and create all tables."""
+        self.db_path = db_path
+        self.init_database()
+        self.migrate_database()
+        
+        # Only populate monsters if table is empty (first run)
+        if self.is_monsters_table_empty():
+            self.populate_initial_monsters()
+"""
 Game database management using SQLite
 Handles player saves, statistics, and monster templates
 """
@@ -34,7 +55,8 @@ class GameDatabase:
                 strength INTEGER NOT NULL,
                 emoji TEXT NOT NULL,
                 created_at TEXT NOT NULL,
-                last_played TEXT NOT NULL
+                last_played TEXT NOT NULL,
+                unlocked_areas TEXT DEFAULT 'forest'
             )
         ''')
         
@@ -42,11 +64,12 @@ class GameDatabase:
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS player_stats (
                 player_name TEXT PRIMARY KEY,
-                battles_won INTEGER DEFAULT 0,
-                battles_lost INTEGER DEFAULT 0,
-                monsters_defeated INTEGER DEFAULT 0,
+                total_monsters_defeated INTEGER DEFAULT 0,
                 total_damage_dealt INTEGER DEFAULT 0,
-                times_fled INTEGER DEFAULT 0,
+                total_damage_taken INTEGER DEFAULT 0,
+                times_rested INTEGER DEFAULT 0,
+                forest_visits INTEGER DEFAULT 0,
+                critical_hits INTEGER DEFAULT 0,
                 FOREIGN KEY (player_name) REFERENCES players (name)
             )
         ''')
@@ -79,6 +102,34 @@ class GameDatabase:
         
         conn.commit()
         conn.close()
+    
+    def migrate_database(self):
+        """Handle database schema migrations for existing databases."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        try:
+            # Check if unlocked_areas column exists
+            cursor.execute("PRAGMA table_info(players)")
+            columns_info = cursor.fetchall()
+            columns = [column[1] for column in columns_info]
+            
+            if 'unlocked_areas' not in columns:
+                print("🔄 Adding unlocked_areas column to existing database...")
+                cursor.execute('ALTER TABLE players ADD COLUMN unlocked_areas TEXT DEFAULT "forest"')
+                
+                # Set forest as unlocked for all existing players
+                cursor.execute('UPDATE players SET unlocked_areas = "forest"')
+                
+                conn.commit()
+                print("✅ Database migration complete! All players now have Forest unlocked.")
+            
+        except sqlite3.Error as e:
+            print(f"⚠️ Database migration failed: {e}")
+            # If migration fails, we should still be able to play, just without unlocked areas
+        
+        finally:
+            conn.close()
     
     def is_monsters_table_empty(self):
         """Check if monster_templates table has any data."""
@@ -132,12 +183,13 @@ class GameDatabase:
         
         cursor.execute('''
             INSERT OR REPLACE INTO players 
-            (name, level, current_health, max_health, strength, emoji, created_at, last_played)
+            (name, level, current_health, max_health, strength, emoji, created_at, last_played, unlocked_areas)
             VALUES (?, ?, ?, ?, ?, ?, 
                     COALESCE((SELECT created_at FROM players WHERE name = ?), ?), 
-                    ?)
+                    ?, 
+                    COALESCE((SELECT unlocked_areas FROM players WHERE name = ?), 'forest'))
         ''', (player.name, player.level, player.current_health, player.max_health, 
-              player.strength, player.emoji, player.name, now, now))
+              player.strength, player.emoji, player.name, now, now, player.name))
         
         # Initialize stats if new player
         cursor.execute('''
@@ -162,7 +214,7 @@ class GameDatabase:
         conn.close()
         
         if row:
-            from player import Player
+            from src.core.player import Player
             player = Player(
                 name=row[0],
                 max_health=row[3],
@@ -188,6 +240,10 @@ class GameDatabase:
         conn.close()
         
         return saves
+    
+    def get_all_players(self):
+        """Get all saved players from database (alias for get_all_saves)."""
+        return self.get_all_saves()
     
     # Monster database methods
     def get_monsters_for_level(self, player_level):
@@ -284,7 +340,24 @@ class GameDatabase:
         row = cursor.fetchone()
         conn.close()
         
-        return row
+        if not row:
+            return {
+                'total_monsters_defeated': 0,
+                'total_damage_dealt': 0,
+                'total_damage_taken': 0,
+                'times_rested': 0,
+                'forest_visits': 0,
+                'critical_hits': 0
+            }
+        
+        return {
+            'total_monsters_defeated': row[1] if len(row) > 1 else 0,
+            'total_damage_dealt': row[2] if len(row) > 2 else 0,
+            'total_damage_taken': row[3] if len(row) > 3 else 0,
+            'times_rested': row[4] if len(row) > 4 else 0,
+            'forest_visits': row[5] if len(row) > 5 else 0,
+            'critical_hits': row[6] if len(row) > 6 else 0
+        }
     
     # Settings methods
     def get_player_settings(self, player_name):
@@ -323,6 +396,102 @@ class GameDatabase:
               int(settings['auto_save_after_rest']),
               int(settings['auto_save_after_combat']),
               int(settings['auto_save_on_inn_visit'])))
+        
+        conn.commit()
+        conn.close()
+    
+    def get_player_unlocked_areas(self, player_name):
+        """Get list of unlocked areas for a player."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT unlocked_areas FROM players WHERE name = ?', (player_name,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row and row[0]:
+            return row[0].split(',')
+        else:
+            return ['forest']  # Default starting area
+    
+    def unlock_area_for_player(self, player_name, area_key):
+        """Unlock a new area for a player."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Get current unlocked areas
+        unlocked_areas = self.get_player_unlocked_areas(player_name)
+        
+        # Add new area if not already unlocked
+        if area_key not in unlocked_areas:
+            unlocked_areas.append(area_key)
+            unlocked_areas_str = ','.join(unlocked_areas)
+            
+            cursor.execute('''
+                UPDATE players 
+                SET unlocked_areas = ? 
+                WHERE name = ?
+            ''', (unlocked_areas_str, player_name))
+            
+            conn.commit()
+        
+        conn.close()
+        return unlocked_areas
+    
+    def debug_players_table(self):
+        """Debug method to show players table structure and data."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        print("🔍 DEBUG: Players table structure:")
+        cursor.execute("PRAGMA table_info(players)")
+        columns_info = cursor.fetchall()
+        for col in columns_info:
+            print(f"  Column: {col[1]} | Type: {col[2]} | Default: {col[4]}")
+        
+        print("\n🔍 DEBUG: Players table data:")
+        cursor.execute("SELECT * FROM players")
+        rows = cursor.fetchall()
+        
+        if rows:
+            for row in rows:
+                print(f"  Player data: {row}")
+        else:
+            print("  No players found in database")
+        
+        conn.close()
+    
+    def get_all_players(self):
+        """Get all saved players from database (alias for get_all_saves)."""
+        return self.get_all_saves()
+    
+    def delete_player(self, player_name):
+        """Delete a player and all associated data."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Delete from all related tables
+        cursor.execute('DELETE FROM player_settings WHERE player_name = ?', (player_name,))
+        cursor.execute('DELETE FROM player_stats WHERE player_name = ?', (player_name,))
+        cursor.execute('DELETE FROM players WHERE name = ?', (player_name,))
+        
+        conn.commit()
+        conn.close()
+    
+    def update_player_stat(self, player_name, stat_name, increment=1):
+        """Update a specific player statistic."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Ensure the player has a stats record
+        cursor.execute('INSERT OR IGNORE INTO player_stats (player_name) VALUES (?)', (player_name,))
+        
+        # Update the specific stat
+        cursor.execute(f'''
+            UPDATE player_stats 
+            SET {stat_name} = {stat_name} + ? 
+            WHERE player_name = ?
+        ''', (increment, player_name))
         
         conn.commit()
         conn.close()

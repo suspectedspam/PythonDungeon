@@ -244,8 +244,30 @@ class Display:
             # Extract key words from option for shorter footer display
             if "Rest" in option:
                 short_options.append(f"{i}) 🛏️ Rest")
-            elif "adventure" in option or "Forest" in option:
-                short_options.append(f"{i}) 🌲 Adventure")
+            elif "adventure" in option.lower():
+                short_options.append(f"{i}) 🗺️ Adventure")
+            elif any(location in option for location in ["Forest", "Cave", "Desert", "Mountain", "Dungeon"]):
+                # Extract the emoji and location name from the full option text
+                # This handles dynamic location names without hardcoding
+                if "🌲" in option:  # Forest
+                    short_options.append(f"{i}) 🌲 Forest")
+                elif "🕳️" in option:  # Cave
+                    short_options.append(f"{i}) 🕳️ Cave")
+                elif "🏜️" in option:  # Desert  
+                    short_options.append(f"{i}) 🏜️ Desert")
+                elif "⛰️" in option:  # Mountain
+                    short_options.append(f"{i}) ⛰️ Mountain")
+                elif "🏰" in option:  # Dungeon
+                    short_options.append(f"{i}) 🏰 Dungeon")
+                else:
+                    # Fallback: try to extract emoji and first word after it
+                    parts = option.split()
+                    if len(parts) >= 2:
+                        emoji = parts[0]
+                        location = parts[1]
+                        short_options.append(f"{i}) {emoji} {location}")
+                    else:
+                        short_options.append(f"{i}) {option}")
             elif "stats" in option:
                 short_options.append(f"{i}) 📊 Stats")
             elif "Save game" in option:

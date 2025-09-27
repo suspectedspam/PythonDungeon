@@ -1,0 +1,1 @@
+"""Game entities - monsters, NPCs, and interactive objects."""
