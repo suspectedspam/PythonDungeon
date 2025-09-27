@@ -438,28 +438,7 @@ class GameDatabase:
         conn.close()
         return unlocked_areas
     
-    def debug_players_table(self):
-        """Debug method to show players table structure and data."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        print("🔍 DEBUG: Players table structure:")
-        cursor.execute("PRAGMA table_info(players)")
-        columns_info = cursor.fetchall()
-        for col in columns_info:
-            print(f"  Column: {col[1]} | Type: {col[2]} | Default: {col[4]}")
-        
-        print("\n🔍 DEBUG: Players table data:")
-        cursor.execute("SELECT * FROM players")
-        rows = cursor.fetchall()
-        
-        if rows:
-            for row in rows:
-                print(f"  Player data: {row}")
-        else:
-            print("  No players found in database")
-        
-        conn.close()
+
     
     def get_all_players(self):
         """Get all saved players from database (alias for get_all_saves)."""
