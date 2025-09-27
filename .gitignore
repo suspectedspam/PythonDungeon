@@ -1,14 +1,17 @@
-# Database files
+# Database files (runtime data, not source code)
 *.db
-pythondungeon.db
+data/*.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Test files
-tests/
+# Test artifacts (keep test source files, ignore generated artifacts)
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
 
 # C extensions
 *.so

@@ -47,15 +47,7 @@ def main():
     
     display_welcome()
 
-    #     # Debug: Check database at startup
-    # print("\n" + "="*60)
-    # print("🔍 STARTUP DATABASE DEBUG")
-    # print("="*60)
-    # from gamedata import game_db
-    # game_db.debug_players_table()
-    # print("="*60 + "\n")
 
-    # time.sleep(100)
     
     # Load existing character or create new one
     player = Player.load_or_create_character()
