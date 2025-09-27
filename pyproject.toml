@@ -1,0 +1,45 @@
+[tool.pytest.ini_options]
+# pytest configuration
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Add current directory to Python path so tests can import our modules
+pythonpath = ["."]
+
+# Markers for organizing tests
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests", 
+    "slow: Slow running tests",
+    "database: Tests that use database"
+]
+
+# Coverage settings
+addopts = [
+    "--cov=.",
+    "--cov-report=html:htmlcov",
+    "--cov-report=term-missing",
+    "--cov-report=xml",
+    "--cov-fail-under=30",  # Set to current coverage level, can increase later
+    "-v"
+]
+
+# Ignore certain files/directories for coverage
+[tool.coverage.run]
+omit = [
+    "tests/*",
+    "venv/*", 
+    "*/__pycache__/*",
+    "setup.py",
+    "*/migrations/*"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError"
+]

@@ -120,7 +120,7 @@ class Monster:
         Returns:
             Monster: A random monster instance
         """
-        from gamedata import game_db
+        from src.core.gamedata import game_db
         
         try:
             monster_data = game_db.get_random_monster(player_level)

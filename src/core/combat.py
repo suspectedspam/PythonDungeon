@@ -6,7 +6,7 @@ Handles turn-based combat with visual feedback
 
 import random
 import time
-from display import display
+from src.ui.display import display
 
 class Combat:
     """Manages combat encounters with scrolling text display."""

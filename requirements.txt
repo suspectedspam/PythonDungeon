@@ -1,0 +1,2 @@
+# Production dependencies
+# Currently no external dependencies for the main game

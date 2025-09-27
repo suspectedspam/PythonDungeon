@@ -104,7 +104,7 @@ class Player:
     # Database Integration Methods
     def save_to_database(self):
         """Save this player to the database."""
-        from gamedata import game_db
+        from src.core.gamedata import game_db
         try:
             game_db.save_player(self)
             return True
@@ -124,12 +124,12 @@ class Player:
             return
             
         if self.save_to_database():
-            from display import display
+            from src.ui.display import display
             display.add_line("💾 Game saved automatically", delay=0.3)
     
     def should_auto_save(self, context):
         """Check if auto-save should happen in this context."""
-        from gamedata import game_db
+        from src.core.gamedata import game_db
         try:
             settings = game_db.get_player_settings(self.name)
             
@@ -146,21 +146,40 @@ class Player:
     
     def get_settings(self):
         """Get player's current settings."""
-        from gamedata import game_db
+        from src.core.gamedata import game_db
         return game_db.get_player_settings(self.name)
     
     def update_settings(self, settings):
         """Update player's settings."""
-        from gamedata import game_db
+        from src.core.gamedata import game_db
         game_db.update_player_settings(self.name, settings)
+    
+    def get_unlocked_areas(self):
+        """Get list of areas unlocked for this player."""
+        from src.core.gamedata import game_db
+        return game_db.get_player_unlocked_areas(self.name)
+    
+    def unlock_area(self, area_key):
+        """Unlock a new area for this player."""
+        from src.core.gamedata import game_db
+        from src.ui.display import display
+        
+        unlocked_areas = game_db.unlock_area_for_player(self.name, area_key)
+        
+        # Show unlock message if it's a new area
+        current_unlocked = self.get_unlocked_areas()
+        if area_key in unlocked_areas and len(unlocked_areas) > len(current_unlocked):
+            display.add_line(f"🗝️ New area unlocked: {area_key.title()}!", delay=0.5)
+        
+        return unlocked_areas
     
     def manual_save(self):
         """Manual save with user feedback."""
         if self.save_to_database():
-            from display import display
+            from src.ui.display import display
             display.add_line("✅ Game saved successfully!", delay=0.4)
         else:
-            from display import display
+            from src.ui.display import display
             display.add_line("❌ Failed to save game", delay=0.4)
     
     @classmethod
@@ -174,7 +193,7 @@ class Player:
         Returns:
             Player or None: Player object if found, None otherwise
         """
-        from gamedata import game_db
+        from src.core.gamedata import game_db
         try:
             return game_db.load_player(name)
         except Exception as e:
@@ -189,7 +208,7 @@ class Player:
         Returns:
             list: List of tuples (name, level, emoji, last_played)
         """
-        from gamedata import game_db
+        from src.core.gamedata import game_db
         try:
             return game_db.get_all_saves()
         except Exception as e:
@@ -204,7 +223,7 @@ class Player:
         Returns:
             Player or None: Selected/created player, or None if cancelled
         """
-        from display import display
+        from src.ui.display import display
         
         # Check for existing saves
         saved_characters = cls.get_all_saved_characters()
@@ -282,7 +301,7 @@ class Player:
     @classmethod
     def create_character(cls):
         """Create a new player character with full creation process."""
-        from display import display
+        from src.ui.display import display
         
         # Name selection
         display.set_header("CHARACTER CREATION")
@@ -344,7 +363,7 @@ You are now ready to begin your adventure!
     @classmethod
     def _choose_character_emoji(cls):
         """Let the player choose an emoji for their character."""
-        from display import display
+        from src.ui.display import display
         
         # Define emoji categories (10 lines of 10 emojis each)
         emoji_lines = [
@@ -400,7 +419,7 @@ You are now ready to begin your adventure!
     @classmethod
     def _choose_from_emoji_line(cls, emoji_line):
         """Let the player choose a specific emoji from a line."""
-        from display import display
+        from src.ui.display import display
         
         while True:
             display.set_header("CHOOSE YOUR EMOJI")

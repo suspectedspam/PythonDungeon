@@ -1,0 +1,1 @@
+"""Game locations and adventure areas."""

@@ -1,0 +1,1 @@
+"""Core game systems - player management, combat, and data persistence."""
