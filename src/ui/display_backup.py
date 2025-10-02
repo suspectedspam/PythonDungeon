@@ -1,27 +1,30 @@
 #!/usr/bin/env python3
 """
-Handles scrolling text window with static header/footer 
-"""
-
-from cgitb import text
-
-
-def set_monster_for_header(self, monster):
-        """Set the monster for HP display in header (combat mode)."""
+Advanced Display u    de    def set_header(self,    def set_monster_for_header(self, monster):
+        \"\"\"Set the monster for HP display in header (combat mode).\"\"\"
         self.monster = monster
     
-def set_debug_mode(self, enabled):
-    """Enable or disable debug mode for ultra-fast text scrolling."""
-    self.debug_mode = enabled
-
-def set_footer(self, text):
-    """Set the footer text."""
-    self.footer_text = text
+    def set_debug_mode(self, enabled):
+        \"\"\"Enable or disable debug mode for ultra-fast text scrolling.\"\"\"
+        self.debug_mode = enabledxt):
+        \"\"\"Set the header text.\"\"\"
+        self.header_text = text
     
-def set_header(self, text):
-    """Set the header text."""
-    self.header_text = text
-
+    def set_debug_mode(self, enabled):
+        \"\"\"Enable or disable debug mode for fast text scrolling.\"\"\"
+        self.debug_mode = enabled
+    
+    def set_footer(self, text):
+        \"\"\"Set the footer text.\"\"\"
+        self.footer_text = texteader(self, text):
+        \"\"\"Set the header text.\"\"\"
+        self.header_text = text
+    
+    def set_debug_mode(self, enabled):
+        \"\"\"Enable or disable debug mode for fast text scrolling.\"\"\"
+        self.debug_mode = enabledities for PythonDungeon
+Handles scrolling text window with static header/footer
+"""
 
 import os
 import sys

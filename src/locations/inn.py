@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""
-Inn system for PythonDungeon
-Handles the inn location, player rest mechanics, and inn menu interface
-"""
-
 import random
 from src.ui.display import display
 from src.config.gamesettings import game_settings
@@ -74,6 +69,12 @@ class Inn:
         
         # Always append to scrolling content
         choice = display.display_menu("Welcome to the Cozy Dragon Inn! 🏠", inn_options, status_text, exposition_intro=False)
+        
+        # Handle special debug command
+        if choice == "debug":
+            from src.debug.debug_menu import debug_menu
+            debug_menu.show_debug_menu(player)
+            return "continue"
         
         if choice == "quit":
             return "quit"

@@ -4,6 +4,7 @@ from time import time
 from src.core.player import Player
 from src.locations.inn import Inn
 from src.ui.display import display
+from src.config.gamesettings import game_settings
 
 def display_welcome():
     """Display the welcome message to the player."""
@@ -40,14 +41,16 @@ Thanks for playing PythonDungeon!"""
 
 def main():
     """Main game function."""
+    # Check for debug mode flag
+    import sys
+    if "--debug" in sys.argv:
+        display.debug_mode = True
+        print("🐛 Debug mode enabled - Ultra-fast text scrolling activated!")
+    
     # Clear content at the very start of the game
     display.clear_content()
     
-
-    
     display_welcome()
-
-
     
     # Load existing character or create new one
     player = Player.load_or_create_character()
