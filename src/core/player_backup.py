@@ -1,34 +1,32 @@
 #!/usr/bin/env python3
 """
 Player class for PythonDungeon
-"""
-
-def display_status(self):
-        
-        """
+C    def display_status(self):
+        \"\"\"Display the p    def get_xp_to_next_level(self):
+        \"\"\"
         Calculate XP needed for next level.
         Uses formula: level * 100 (level 1->2 needs 100 XP, 2->3 needs 200 XP, etc.)
         
         Returns:
             int: Total XP needed to reach next level
-        """
+        \"\"\"
         return self.level * 100
     
-def get_current_level_xp(self):
-    """
-    Calculate XP threshold for current level.
-    
-    Returns:
-        int: Total XP needed to reach current level
-    """
-    return max(0, (self.level - 1) * 100)
-    print(f"🏃 {self.name} (Lvl {self.level}): {self.current_health}/{self.max_health} HP | Strength: {self.strength} | {self.get_xp_display()}")
+    def get_current_level_xp(self):
+        \"\"\"
+        Calculate XP threshold for current level.
+        
+        Returns:
+            int: Total XP needed to reach current level
+        \"\"\"
+        return max(0, (self.level - 1) * 100)atus.\"\"\"
+        print(f\"🏃 {self.name} (Lvl {self.level}): {self.current_health}/{self.max_health} HP | Strength: {self.strength} | {self.get_xp_display()}\")
     
     def display_stats(self):
-        """Display the player's full stats."""
-        print(f"📊 {self.name} Stats:")
-        creation_text = f"""
-Greetings, {self.name}!
+        \"\"\"Display the player's full stats.\"\"\"
+        print(f\"📊 {self.name} Stats:\")
+        print(f\"         creation_text = f\"\"\"
+Greetings, {player_name}!
 You are now ready to begin your adventure!
 
 📊 {player.emoji} {player_name} Stats:
@@ -38,11 +36,11 @@ You are now ready to begin your adventure!
    {player.get_xp_display()}
    Status: {player.get_health_status()}
 
-{player.emoji} {player.name} arrives at the inn, ready for adventure")
-        print(f"   Health: {self.current_health}/{self.max_health}")
-        print(f"   Strength: {self.strength}")
-        print(f"   {self.get_xp_display()}")
-        print(f"   Status: {self.get_health_status()}")
+{player.emoji} {player.name} arrives at the inn, ready for adventure!\"\"\"elf.level}\")
+        print(f\"   Health: {self.current_health}/{self.max_health}\")
+        print(f\"   Strength: {self.strength}\")
+        print(f\"   {self.get_xp_display()}\")
+        print(f\"   Status: {self.get_health_status()}\")yer character functionality and stats
 """
 
 class Player:
@@ -647,4 +645,3 @@ if __name__ == "__main__":
     restored = player.rest()
     print(f"Player restored {restored} HP!")
     player.display_status()
-

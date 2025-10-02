@@ -54,6 +54,7 @@ class GameDatabase:
                 max_health INTEGER NOT NULL,
                 strength INTEGER NOT NULL,
                 emoji TEXT NOT NULL,
+                experience INTEGER DEFAULT 0,
                 created_at TEXT NOT NULL,
                 last_played TEXT NOT NULL,
                 unlocked_areas TEXT DEFAULT 'forest'
@@ -114,15 +115,23 @@ class GameDatabase:
             columns_info = cursor.fetchall()
             columns = [column[1] for column in columns_info]
             
+            # Migrate unlocked_areas column
             if 'unlocked_areas' not in columns:
                 print("🔄 Adding unlocked_areas column to existing database...")
                 cursor.execute('ALTER TABLE players ADD COLUMN unlocked_areas TEXT DEFAULT "forest"')
-                
-                # Set forest as unlocked for all existing players
                 cursor.execute('UPDATE players SET unlocked_areas = "forest"')
+                print("✅ Database migration: unlocked_areas column added!")
+            
+            # Migrate experience column
+            if 'experience' not in columns:
+                print("🔄 Adding experience column to existing database...")
+                cursor.execute('ALTER TABLE players ADD COLUMN experience INTEGER DEFAULT 0')
+                cursor.execute('UPDATE players SET experience = 0')
+                print("✅ Database migration: experience column added!")
                 
+            if 'unlocked_areas' not in columns or 'experience' not in columns:
                 conn.commit()
-                print("✅ Database migration complete! All players now have Forest unlocked.")
+                print("✅ Database migration complete!")
             
         except sqlite3.Error as e:
             print(f"⚠️ Database migration failed: {e}")
@@ -183,13 +192,13 @@ class GameDatabase:
         
         cursor.execute('''
             INSERT OR REPLACE INTO players 
-            (name, level, current_health, max_health, strength, emoji, created_at, last_played, unlocked_areas)
-            VALUES (?, ?, ?, ?, ?, ?, 
+            (name, level, current_health, max_health, strength, emoji, experience, created_at, last_played, unlocked_areas)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 
                     COALESCE((SELECT created_at FROM players WHERE name = ?), ?), 
                     ?, 
                     COALESCE((SELECT unlocked_areas FROM players WHERE name = ?), 'forest'))
         ''', (player.name, player.level, player.current_health, player.max_health, 
-              player.strength, player.emoji, player.name, now, now, player.name))
+              player.strength, player.emoji, player.experience, player.name, now, now, player.name))
         
         # Initialize stats if new player
         cursor.execute('''
@@ -215,12 +224,15 @@ class GameDatabase:
         
         if row:
             from src.core.player import Player
+            # Handle both old and new database schemas
+            experience = row[6] if len(row) > 6 else 0
             player = Player(
                 name=row[0],
                 max_health=row[3],
                 strength=row[4], 
                 level=row[1],
-                emoji=row[5]
+                emoji=row[5],
+                experience=experience
             )
             player.current_health = row[2]
             return player

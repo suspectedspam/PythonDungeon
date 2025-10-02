@@ -11,7 +11,7 @@ class GameSettings:
     
     def __init__(self):
         """Initialize the game settings manager."""
-        pass
+        self.debug_mode = False  # Debug mode for fast testing
     
     def show_settings_menu(self, player):
         """
@@ -45,74 +45,45 @@ class GameSettings:
                 
                 if choice == "1":
                     settings['auto_save_after_rest'] = not settings['auto_save_after_rest']
-                    status = "enabled" if settings['auto_save_after_rest'] else "disabled"
-                    display.add_line(f"✅ Auto-save after resting {status}!", delay=0.4)
                     player.update_settings(settings)
-                
+                    display.add_line(f"✅ Auto-save after rest: {'Enabled' if settings['auto_save_after_rest'] else 'Disabled'}", delay=0.4)
+                    
                 elif choice == "2":
                     settings['auto_save_after_combat'] = not settings['auto_save_after_combat']
-                    status = "enabled" if settings['auto_save_after_combat'] else "disabled"
-                    display.add_line(f"✅ Auto-save after combat {status}!", delay=0.4)
                     player.update_settings(settings)
-                
+                    display.add_line(f"⚔️ Auto-save after combat: {'Enabled' if settings['auto_save_after_combat'] else 'Disabled'}", delay=0.4)
+                    
                 elif choice == "3":
                     settings['auto_save_on_inn_visit'] = not settings['auto_save_on_inn_visit']
-                    status = "enabled" if settings['auto_save_on_inn_visit'] else "disabled"
-                    display.add_line(f"✅ Auto-save on inn visit {status}!", delay=0.4)
                     player.update_settings(settings)
-                
+                    display.add_line(f"🏠 Auto-save on inn visit: {'Enabled' if settings['auto_save_on_inn_visit'] else 'Disabled'}", delay=0.4)
+                    
                 elif choice == "4":
-                    display.add_line("🏠 Returning to inn...", delay=0.4)
-                    break
+                    # Clear footer when leaving
+                    display.set_footer("")
+                    return
                 
                 else:
-                    display.add_line("Please choose a valid option (1-4).")
-            
+                    display.add_line("❌ Invalid choice. Please choose 1-4.", delay=0.3)
+                    
             except (EOFError, KeyboardInterrupt):
-                break
-    
-    def get_setting_description(self, setting_name):
-        """
-        Get a user-friendly description of a setting.
-        
-        Args:
-            setting_name (str): Internal setting name
-            
-        Returns:
-            str: Human-readable description
-        """
-        descriptions = {
-            'auto_save_after_rest': 'Automatically save when resting at the inn',
-            'auto_save_after_combat': 'Automatically save after forest adventures and battles',
-            'auto_save_on_inn_visit': 'Automatically save every time you return to the inn'
-        }
-        return descriptions.get(setting_name, setting_name)
-    
-    def reset_settings_to_default(self, player):
-        """
-        Reset all settings to their default values.
-        
-        Args:
-            player: The player object to reset settings for
-        """
-        default_settings = {
-            'auto_save_after_rest': True,
-            'auto_save_after_combat': True,
-            'auto_save_on_inn_visit': False
-        }
-        
-        player.update_settings(default_settings)
-        display.add_line("⚙️ Settings reset to defaults!", delay=0.4)
+                # Clear footer when interrupted
+                display.set_footer("")
+                return
+                
+            # Brief pause before next menu display
+            import time
+            time.sleep(0.5)
     
     def export_settings(self, player):
         """
-        Export player settings for backup or sharing.
+        Export player settings to a dictionary for backup.
         
         Args:
-            player: The player object to export settings from
+            player: The player object with settings methods
             
         Returns:
-            dict: Dictionary of current settings
+            dict: Player settings
         """
         return player.get_settings()
     
@@ -132,6 +103,22 @@ class GameSettings:
             display.add_line("⚙️ Settings imported successfully!", delay=0.4)
         else:
             display.add_line("❌ Invalid settings format!", delay=0.4)
+    
+    def toggle_debug_mode(self):
+        """Toggle debug mode on/off."""
+        self.debug_mode = not self.debug_mode
+        
+        # Update the display system with new delay settings
+        if self.debug_mode:
+            display.set_debug_mode(True)
+            display.add_line("🐛 DEBUG MODE: ON - Fast text scrolling enabled", delay=0)
+        else:
+            display.set_debug_mode(False)
+            display.add_line("🐛 DEBUG MODE: OFF - Normal text scrolling restored", delay=0.3)
+    
+    def is_debug_mode(self):
+        """Check if debug mode is enabled."""
+        return self.debug_mode
 
-# Create global settings manager instance
+# Global game settings instance
 game_settings = GameSettings()

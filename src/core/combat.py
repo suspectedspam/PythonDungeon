@@ -189,9 +189,36 @@ class Combat:
                         display.add_line(threshold_message, delay=0.6)
                 
                 if not monster.is_alive:
+                    # Calculate XP reward based on monster level relative to player level
+                    # Higher level monsters give more XP, lower level give less
+                    level_difference = monster.level - player.level
+                    base_xp = monster.level * 20  # Base XP per monster level
+                    
+                    # Scale XP based on level difference to encourage appropriate challenges
+                    if level_difference >= 2:
+                        xp_multiplier = 1.5  # 50% bonus for challenging monsters
+                    elif level_difference >= 0:
+                        xp_multiplier = 1.0  # Normal XP for equal/slightly higher level
+                    elif level_difference >= -2:
+                        xp_multiplier = 0.7  # Reduced XP for lower level monsters
+                    else:
+                        xp_multiplier = 0.3  # Very little XP for much lower level monsters
+                    
+                    base_xp = int(base_xp * xp_multiplier)
+                    xp_bonus = random.randint(0, 5)  # Small random bonus
+                    total_xp = max(1, base_xp + xp_bonus)  # Minimum 1 XP
+                    
                     display.add_line("", delay=0.4)
                     display.add_line(f"🎉 Victory! You defeated the {monster.name}!", delay=0.6)
-                    display.add_line("💰 You gain experience from this battle!", delay=0)
+                    display.add_line(f"✨ You gained {total_xp} experience points!", delay=0.4)
+                    
+                    # Award experience and check for level up
+                    leveled_up = player.add_experience(total_xp)
+                    
+                    if not leveled_up:
+                        # Show XP progress if didn't level up
+                        display.add_line(f"📊 {player.get_xp_display()}", delay=0.3)
+                    
                     display.set_footer("Press Enter to continue...")
                     display.refresh_display()
                     try:
