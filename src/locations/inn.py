@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import random
+from src.locations.adventure import Adventure
 from src.ui.display import display
 from src.config.gamesettings import game_settings
+from src.debug.debug_menu import debug_menu
 
 class Inn:
     """Manages the inn location and rest functionality."""
@@ -72,7 +74,6 @@ class Inn:
         
         # Handle special debug command
         if choice == "debug":
-            from src.debug.debug_menu import debug_menu
             debug_menu.show_debug_menu(player)
             return "continue"
         
@@ -94,7 +95,6 @@ class Inn:
             display.display_text(rest_text, title="Resting at the Inn")
             
         elif choice == "2":  # Adventure selection
-            from src.locations.adventure import Adventure
             
             result = Adventure.show_adventure_selection_menu(player)
             
@@ -135,27 +135,3 @@ class Inn:
             return "quit"
         
         return "continue"
-
-# Example usage and testing
-if __name__ == "__main__":
-    from src.core.player import create_player
-    
-    print("=== Inn System Test ===")
-    print()
-    
-    # Create test player
-    player = create_player("TestHero")
-    inn = Inn()
-    
-    # Test inn display
-    inn.show_inn(player)
-    
-    # Test resting
-    # Damage player first to test rest
-    player.update_health(25)
-    print("Player takes some damage for testing...")
-    player.display_status()
-    
-    result = inn.rest_at_inn(player)
-    print(f"Rest result: {result}")
-    player.display_status()

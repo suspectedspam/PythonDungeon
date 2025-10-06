@@ -4,6 +4,9 @@ Game settings management for PythonDungeon
 Handles auto-save preferences and other game configuration options
 """
 
+import time
+import os
+import json
 from src.ui.display import display
 
 class GameSettings:
@@ -12,6 +15,11 @@ class GameSettings:
     def __init__(self):
         """Initialize the game settings manager."""
         self.debug_mode = False  # Debug mode for fast testing
+        self.auto_save = True    # Automatic save functionality
+        self.text_speed = 0.3    # Text scrolling speed (0.1 - 1.0)
+        
+        # Load settings from file if it exists
+        self.load_settings()
     
     def show_settings_menu(self, player):
         """
@@ -72,7 +80,6 @@ class GameSettings:
                 return
                 
             # Brief pause before next menu display
-            import time
             time.sleep(0.5)
     
     def export_settings(self, player):
@@ -119,6 +126,50 @@ class GameSettings:
     def is_debug_mode(self):
         """Check if debug mode is enabled."""
         return self.debug_mode
+    
+    def save_settings(self):
+        """Save current settings to file."""
+        try:
+            # Ensure config directory exists
+            config_dir = "config"
+            if not os.path.exists(config_dir):
+                os.makedirs(config_dir)
+            
+            # Save settings as JSON
+            settings_data = {
+                "debug_mode": self.debug_mode,
+                "auto_save": self.auto_save,
+                "text_speed": self.text_speed
+            }
+            
+            with open(os.path.join(config_dir, "settings.json"), 'w') as f:
+                json.dump(settings_data, f, indent=2)
+                
+        except (OSError, IOError, PermissionError):
+            # Handle file system errors gracefully
+            pass
+    
+    def load_settings(self):
+        """Load settings from file."""
+        try:
+            settings_file = os.path.join("config", "settings.json")
+            if os.path.exists(settings_file):
+                with open(settings_file, 'r') as f:
+                    settings_data = json.load(f)
+                
+                # Apply loaded settings with validation
+                if isinstance(settings_data, dict):
+                    self.debug_mode = settings_data.get("debug_mode", False)
+                    self.auto_save = settings_data.get("auto_save", True)
+                    text_speed = settings_data.get("text_speed", 0.3)
+                    
+                    # Validate text_speed bounds
+                    self.text_speed = max(0.1, min(1.0, text_speed))
+                    
+        except (OSError, IOError, json.JSONDecodeError, PermissionError):
+            # Handle file system and JSON errors gracefully
+            # Keep default values if loading fails
+            pass
 
 # Global game settings instance
 game_settings = GameSettings()

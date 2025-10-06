@@ -3,6 +3,10 @@
 Player class for PythonDungeon
 """
 
+from datetime import datetime
+from src.core.gamedata import game_db
+from src.ui.display import display
+
 def display_status(self):
         
         """
@@ -207,7 +211,6 @@ class Player:
         self.is_alive = True
         
         # Display level up message  
-        from src.ui.display import display
         level_up_text = f"""🎉 LEVEL UP! 🎉
 
 🌟 {self.name} reached Level {self.level}!
@@ -241,7 +244,6 @@ class Player:
     # Database Integration Methods
     def save_to_database(self):
         """Save this player to the database."""
-        from src.core.gamedata import game_db
         try:
             game_db.save_player(self)
             return True
@@ -261,12 +263,10 @@ class Player:
             return
             
         if self.save_to_database():
-            from src.ui.display import display
             display.add_line("💾 Game saved automatically", delay=0.3)
     
     def should_auto_save(self, context):
         """Check if auto-save should happen in this context."""
-        from src.core.gamedata import game_db
         try:
             settings = game_db.get_player_settings(self.name)
             
@@ -283,24 +283,18 @@ class Player:
     
     def get_settings(self):
         """Get player's current settings."""
-        from src.core.gamedata import game_db
         return game_db.get_player_settings(self.name)
     
     def update_settings(self, settings):
         """Update player's settings."""
-        from src.core.gamedata import game_db
         game_db.update_player_settings(self.name, settings)
     
     def get_unlocked_areas(self):
         """Get list of areas unlocked for this player."""
-        from src.core.gamedata import game_db
         return game_db.get_player_unlocked_areas(self.name)
     
     def unlock_area(self, area_key):
         """Unlock a new area for this player."""
-        from src.core.gamedata import game_db
-        from src.ui.display import display
-        
         unlocked_areas = game_db.unlock_area_for_player(self.name, area_key)
         
         # Show unlock message if it's a new area
@@ -313,10 +307,8 @@ class Player:
     def manual_save(self):
         """Manual save with user feedback."""
         if self.save_to_database():
-            from src.ui.display import display
             display.add_line("✅ Game saved successfully!", delay=0.4)
         else:
-            from src.ui.display import display
             display.add_line("❌ Failed to save game", delay=0.4)
     
     @classmethod
@@ -330,7 +322,6 @@ class Player:
         Returns:
             Player or None: Player object if found, None otherwise
         """
-        from src.core.gamedata import game_db
         try:
             return game_db.load_player(name)
         except Exception as e:
@@ -345,7 +336,6 @@ class Player:
         Returns:
             list: List of tuples (name, level, emoji, last_played)
         """
-        from src.core.gamedata import game_db
         try:
             return game_db.get_all_saves()
         except Exception as e:
@@ -360,7 +350,6 @@ class Player:
         Returns:
             Player or None: Selected/created player, or None if cancelled
         """
-        from src.ui.display import display
         
         # Check for existing saves
         saved_characters = cls.get_all_saved_characters()
@@ -377,7 +366,6 @@ class Player:
             display.add_line("📁 Saved Characters:", delay=0.4)
             for i, (name, level, emoji, last_played) in enumerate(saved_characters, 1):
                 # Format last played date
-                from datetime import datetime
                 try:
                     last_date = datetime.fromisoformat(last_played).strftime("%m/%d %H:%M")
                 except:
@@ -438,7 +426,6 @@ class Player:
     @classmethod
     def create_character(cls):
         """Create a new player character with full creation process."""
-        from src.ui.display import display
         
         # Name selection
         display.set_header("CHARACTER CREATION")
@@ -500,7 +487,6 @@ You are now ready to begin your adventure!
     @classmethod
     def _choose_character_emoji(cls):
         """Let the player choose an emoji for their character."""
-        from src.ui.display import display
         
         # Define emoji categories (10 lines of 10 emojis each)
         emoji_lines = [
@@ -556,7 +542,6 @@ You are now ready to begin your adventure!
     @classmethod
     def _choose_from_emoji_line(cls, emoji_line):
         """Let the player choose a specific emoji from a line."""
-        from src.ui.display import display
         
         while True:
             display.set_header("CHOOSE YOUR EMOJI")
@@ -594,57 +579,3 @@ You are now ready to begin your adventure!
                 display.add_line("Please enter a valid number or 'b' to go back.")
             except (EOFError, KeyboardInterrupt):
                 return None
-
-# Helper function to create a new player
-def create_player(name, character_class="Adventurer"):
-    """
-    Create a new player with default or class-based stats.
-    
-    Args:
-        name (str): Player's name
-        character_class (str): Character class (for future expansion)
-        
-    Returns:
-        Player: A new player instance
-    """
-    # Basic adventurer stats for now
-    # In the future, this could vary by character class
-    return Player(name, max_health=50, strength=6, level=1, experience=0)
-
-# Example usage and testing
-if __name__ == "__main__":
-    print("=== Player System Test ===")
-    print()
-    
-    # Create a player
-    player = create_player("Hero")
-    print(f"Created: {player}")
-    player.display_stats()
-    print()
-    
-    # Test taking damage using combat system
-    from combat import Combat
-    combat = Combat()
-    
-    print("🗡️  Player takes damage in combat!")
-    damage_dealt = combat.calculate_damage(15)
-    new_health, is_alive = combat.take_damage(player.current_health, damage_dealt)
-    player.update_health(new_health)
-    
-    print(f"Player took {damage_dealt} damage!")
-    player.display_status()
-    print()
-    
-    # Test healing
-    print("💚 Player uses a healing potion!")
-    healed = player.heal(20)
-    print(f"Player healed for {healed} HP!")
-    player.display_status()
-    print()
-    
-    # Test resting
-    print("😴 Player rests to recover fully!")
-    restored = player.rest()
-    print(f"Player restored {restored} HP!")
-    player.display_status()
-

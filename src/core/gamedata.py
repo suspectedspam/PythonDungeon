@@ -1,26 +1,5 @@
 #!/usr/bin/env python3
 """
-Game database management for PythonDungeon
-Handles SQLite database operations for players, stats, settings, and monsters
-"""
-
-import sqlite3
-import random
-from datetime import datetime
-
-class GameDatabase:
-    """Manages all database operations for the game."""
-    
-    def __init__(self, db_path="data/pythondungeon.db"):
-        """Initialize the database and create all tables."""
-        self.db_path = db_path
-        self.init_database()
-        self.migrate_database()
-        
-        # Only populate monsters if table is empty (first run)
-        if self.is_monsters_table_empty():
-            self.populate_initial_monsters()
-"""
 Game database management using SQLite
 Handles player saves, statistics, and monster templates
 """
@@ -35,6 +14,7 @@ class GameDatabase:
         """Initialize the game database."""
         self.db_path = db_path
         self.init_database()
+        self.migrate_database()
         
         # Only populate monsters if table is empty (first run)
         if self.is_monsters_table_empty():
@@ -223,7 +203,9 @@ class GameDatabase:
         conn.close()
         
         if row:
+            # Dynamic import to avoid circular imports
             from src.core.player import Player
+            
             # Handle both old and new database schemas
             experience = row[6] if len(row) > 6 else 0
             player = Player(
@@ -253,10 +235,6 @@ class GameDatabase:
         
         return saves
     
-    def get_all_players(self):
-        """Get all saved players from database (alias for get_all_saves)."""
-        return self.get_all_saves()
-    
     # Monster database methods
     def get_monsters_for_level(self, player_level):
         """Get all monsters appropriate for player's level."""
@@ -279,10 +257,13 @@ class GameDatabase:
         if not monsters:
             return None
         
+        # Import Monster constants for readability
+        from src.entities.monster import Monster
+        
         # Weight by rarity (common monsters more likely)
         weights = []
         for monster in monsters:
-            rarity = monster[6]  # rarity column
+            rarity = monster[Monster.DB_RARITY]  # Use constant instead of magic number
             if rarity == 'common':
                 weights.append(50)
             elif rarity == 'uncommon':
@@ -450,11 +431,6 @@ class GameDatabase:
         conn.close()
         return unlocked_areas
     
-
-    
-    def get_all_players(self):
-        """Get all saved players from database (alias for get_all_saves)."""
-        return self.get_all_saves()
     
     def delete_player(self, player_name):
         """Delete a player and all associated data."""

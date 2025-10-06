@@ -5,6 +5,7 @@ Handles forest encounters, monsters, and exploration
 """
 
 import random
+from src.entities.monster import Monster
 from src.locations.adventure import Adventure
 
 class Forest(Adventure):
@@ -61,29 +62,6 @@ Adventure awaits in the mysterious depths ahead!"""
         Returns:
             Monster: A forest-appropriate monster from the database
         """
-        from src.entities.monster import Monster
         
         # Use database-driven monster creation
         return Monster.create_random_for_level(player_level)
-    
-
-                # If continue, loop again for another encounter
-    
-
-
-# Example usage and testing
-if __name__ == "__main__":
-    from src.core.player import create_player
-    
-    print("=== Forest System Test ===")
-    print()
-    
-    # Create test player and forest
-    player = create_player("TestHero")
-    forest = Forest()
-    
-    # Test forest adventure
-    result = forest.start_adventure(player)
-    print(f"\nAdventure result: {result}")
-    
-    player.display_status()
