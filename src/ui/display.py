@@ -3,6 +3,9 @@
 Handles scrolling text window with static header/footer 
 """
 
+import os
+import sys
+import time
 from cgitb import text
 
 
@@ -21,11 +24,6 @@ def set_footer(self, text):
 def set_header(self, text):
     """Set the header text."""
     self.header_text = text
-
-
-import os
-import sys
-import time
 
 class Display:
     """Manages scrolling text window with static elements."""
@@ -183,10 +181,9 @@ class Display:
         
         # Additional sleep if specified
         if sleep is not None and sleep > 0:
-            import time
             actual_sleep = self.debug_delay if self.debug_mode else sleep
-            time.sleep(actual_sleep)
-    
+            os.sleep(actual_sleep)
+
     def print_header(self):
         """Print the static header bar with dynamic HP information."""
         print("=" * self.ui_width)
@@ -417,18 +414,3 @@ class Display:
 
 # Global display instance for easy access
 display = Display()
-
-# Example usage and testing
-if __name__ == "__main__":
-    # Test the scrolling display system
-    display.display_text("Welcome to the Scrolling Display System!", exposition=True, pause=True, title="UI Test")
-    
-    # Test adding multiple lines
-    display.clear_content()
-    display.set_header("Testing Scroll")
-    for i in range(20):
-        display.add_line(f"This is line {i+1}")
-        test_delay = display.debug_delay if display.debug_mode else 0.2
-        time.sleep(test_delay)
-    
-    input("Press Enter to exit test...")

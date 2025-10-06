@@ -6,8 +6,8 @@ Provides common functionality for all adventure locations
 
 import random
 from abc import ABC, abstractmethod
-from src.core.combat import Combat
 from src.ui.display import display
+from src.core.combat import Combat
 
 class Adventure(ABC):
     """
@@ -109,7 +109,7 @@ class Adventure(ABC):
         
         encounter_text = f"""You encounter a dangerous creature!
 
-{monster.emoji} {monster.name} (Lvl {monster.level})"""
+                            {monster.emoji} {monster.name} (Lvl {monster.level})"""
         
         # Show encounter info (HP already in header from adventure)
         display.display_text(encounter_text, title="Monster Encounter")
@@ -173,17 +173,6 @@ class Adventure(ABC):
         """
         self.encounter_rate = max(0.0, min(1.0, rate))
     
-
-    
-    def can_rest_here(self):
-        """
-        Check if the player can rest in this location.
-        Override in subclasses - most dangerous places don't allow rest.
-        
-        Returns:
-            bool: True if resting is allowed
-        """
-        return False  # Most adventure locations are too dangerous for rest
     
     # Class-level adventure management methods
     @classmethod
@@ -197,18 +186,19 @@ class Adventure(ABC):
         adventure_classes = {}
         
         try:
+            # Use dynamic import to avoid circular imports
             from src.locations.forest import Forest
             adventure_classes['forest'] = Forest
             
-            # Test creating an instance
+            # Test creating an instance to ensure it works
             test_forest = Forest()
             location_name = test_forest.get_location_name()
             
-
-            
         except ImportError as e:
+            # Forest module not available
             pass
         except Exception as e:
+            # Forest class has issues, skip it
             pass
         return adventure_classes
     
@@ -240,8 +230,6 @@ class Adventure(ABC):
                 location_name = temp_adventure.get_location_name()
                 location_emoji = temp_adventure.get_location_emoji()
                 
-
-                
                 available_adventures.append((
                     key,
                     location_name,
@@ -261,7 +249,6 @@ class Adventure(ABC):
         Returns:
             str: Result of adventure or "cancelled" if player backs out
         """
-        from src.ui.display import display
         
         available_adventures = cls.get_available_adventures(player)
         
