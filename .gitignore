@@ -77,3 +77,15 @@ venv.bak/
 # OS
 .DS_Store
 Thumbs.db
+
+# Personal learning documentation (private to developer)
+docs/LEARNING_FRAMEWORK.md
+docs/PERSONAL_NOTES.md
+docs/*_PERSONAL_*
+docs/*_PRIVATE_*
+
+# Keep project documentation public:
+# docs/README.md
+# docs/API_DOCUMENTATION.md  
+# docs/ARCHITECTURE.md
+# docs/DEPLOYMENT.md
